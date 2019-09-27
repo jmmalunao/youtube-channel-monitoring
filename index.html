@@ -21,86 +21,151 @@
     <div class="container">
         <div class="row">
             <div class="col-xs-12">
-                <div class="table-responsive-sm">
-                    <table class="table table-bordered table-dark">
-                        <thead>
-                            <tr>
-                                <th colspan="3">Upcoming: 29 Live: 43 Completed: 0</th>
-                            </tr>
-                            <tr>
-                                <th colspan="3">NOW1</th>
-                            </tr>
-                            <tr>
-                                <th>Upcoming: #</th>
-                                <th>Live: #</th>
-                                <th>Completed: #</th>
-                            </tr>
-                        </thead>
-                        <tbody>
-                            <tr>
-                                <td>MMDA-NOW 3079 COMMONWEALTH - ST.PETER FOOT BRIDGE</td>
-                                <td>MMDA-NOW 3063 Q.C. Circle - Kalayaan Ave.</td>
-                                <td></td>
-                            </tr>
-                        </tbody>
-                    </table>
+                <div class="alert alert-danger" role="alert">Due to Youtube API Key limitation, please make a request
+                    every 1 hour.</div>
+                <div>
+                    Upcoming: <span id="totalUpcoming"></span> Live: <span id="totalLive"></span> Completed:
+                    <span id="totalCompleted"></span>
                 </div>
-
-                <div class="table-responsive-sm">
-                    <table class="table table-bordered table-dark">
-                        <thead>
-                            <tr>
-                                <th colspan="3">NOW2</th>
-                            </tr>
-                            <tr>
-                                <th>Upcoming: #</th>
-                                <th>Live: #</th>
-                                <th>Completed: #</th>
-                            </tr>
-                        </thead>
-                        <tbody>
-                            <tr>
-                                <td></td>
-                            </tr>
-                        </tbody>
-                    </table>
-                </div>
-
             </div>
         </div>
+        <div class="row">
+            <div class="col-md-4">
+                <table class="table table-bordered" id="now1Upcoming">
+                    <tr>
+                        <td>Upcoming: <span id="now1_countUpcoming"></span></td>
+                    </tr>
+                </table>
+            </div>
+            <div class="col-md-4">
+                <table class="table table-bordered" id="now1Live">
+                    <tr>
+                        <td>Live: <span id="now1_countLive"></span></td>
+                    </tr>
+                </table>
+            </div>
+            <div class="col-md-4">
+                <table class="table table-bordered" id="now1Completed">
+                    <tr>
+                        <td>Completed: <span id="now1_countCompleted"></span></td>
+                    </tr>
+                </table>
+            </div>
+        </div>
+
+        <div class="row">
+            <div class="col-md-4">
+                <table class="table table-bordered" id="now2Upcoming">
+                    <tr>
+                        <td>Upcoming: <span id="now2_countUpcoming"></span></td>
+                    </tr>
+                </table>
+            </div>
+            <div class="col-md-4">
+                <table class="table table-bordered" id="now2Live">
+                    <tr>
+                        <td>Live: <span id="now2_countLive"></span></td>
+                    </tr>
+                </table>
+            </div>
+            <div class="col-md-4">
+                <table class="table table-bordered" id="now2Completed">
+                    <tr>
+                        <td>Completed: <span id="now2_countCompleted"></span></td>
+                    </tr>
+                </table>
+            </div>
+        </div>
+        <div class="row">
+            <div class="col-md-4">
+                <table class="table table-bordered" id="now1Uncategorized">
+                    <tr>
+                        <td>NOW1 Uncategorized: <span id="now1_countUncategorized"></span></td>
+                    </tr>
+                </table>
+            </div>
+        </div>
+        <div class="row">
+            <div class="col-md-4">
+                <table class="table table-bordered" id="now2Uncategorized">
+                    <tr>
+                        <td>NOW2 Uncategorized: <span id="now2_countUncategorized"></span></td>
+                    </tr>
+                </table>
+            </div>
+        </div>
+    </div>
     </div>
     <script>
         $.noConflict();
         jQuery(document).ready(function ($) {
+            let youtubeKey = "AIzaSyB0UE7oHOhdFpK1fB0yaCfslLM5EEz5Eok"; // Please change your own key here.
+            let totalLive = 0;
+            let totalUpcoming = 0;
+            let totalCompleted = 0;
 
-            function list(channelId) {
-                items = new Array();
-                $.getJSON(`https://www.googleapis.com/youtube/v3/search?part=snippet&channelId=${channelId}&maxResults=50&key=AIzaSyB0UE7oHOhdFpK1fB0yaCfslLM5EEz5Eok`, function (data) {
-                    // console.log(data);
-                    // console.log(data.items[0].snippet.channelId);
-                    // console.log(data.items[0].snippet.channelTitle);
-                    // console.log(data.pageInfo.totalResults);
-                    let totalResults = data.pageInfo.totalResults - 1; // Minus 1 kasi yung unang item ay about sa channel
-                    for (i = 1; i <= totalResults; i++) {
-                        // console.log(data.items[1].id.videoId);
-                        // console.log(data.items[1].snippet.title);
-                        //console.log(data.items[1].snippet.liveBroadcastContent);
-                        //let item = { videoId: data.items[i].id.videoId, title: data.items[i].snippet.title, liveBroadcastContent: data.items[i].snippet.liveBroadcastContent };
-                        item = new Array(data.items[i].id.videoId, data.items[i].snippet.title, data.items[i].snippet.liveBroadcastContent);
-                        items.push(item);
+            function getVideoStatus(videoId, callback) {
+                let url = `https://www.googleapis.com/youtube/v3/videos?part=snippet&id=${videoId}&key=${youtubeKey}`;
+
+                $.ajax({
+                    dataType: "json",
+                    url: url,
+                    success: function (data) {
+                        callback(data);
                     }
                 });
-                return items;
             }
 
-            function getVideoStatus(videoId) {
-                console.log(videoId);
+            function getVideolist(channelId, tblId) {
+                let tb = `#${tblId}`;
+                const _table = $(tb);
+                let countUpcoming = 0;
+                let countLive = 0;
+                let countCompleted = 0;
+
+                $.getJSON(`https://www.googleapis.com/youtube/v3/search?part=snippet&channelId=${channelId}&maxResults=50&key=${youtubeKey}`, function (data) {
+                    let totalResults = data.pageInfo.totalResults - 1; // Minus 1 kasi yung unang item ay about sa channel
+                    for (i = 1; i <= totalResults; i++) {
+
+                        let liveBroadcastContent = data.items[i].snippet.liveBroadcastContent;
+                        let videoId = data.items[i].id.videoId;
+
+                        let txt = "";
+                        if (liveBroadcastContent == "none") {
+                            getVideoStatus(videoId, function (data2) {
+                                let status = data2.items[0].snippet.liveBroadcastContent;
+                                if (status == "live") {
+                                    countLive++;
+                                    $(`${tb}Live`).append(`<tr><td>${data2.items[0].snippet.title}</td></tr>`);
+                                    $(`${tb}_countLive`).text(countLive);
+                                } else if (status == "completed") {
+                                    countCompleted++;
+                                    $(`${tb}Completed`).append(`<tr><td>${data2.items[0].snippet.title}</td></tr>`);
+                                    $(`${tb}_countCompleted`).text(countCompleted);
+                                } else {
+                                    $(`${tb}Uncategorized`).append(`<tr><td>${data2.items[0].snippet.title}</td></tr>`);
+                                }
+                            });
+                        } else if (liveBroadcastContent == "upcoming") {
+                            countUpcoming++;
+                            $(`${tb}Upcoming`).append(`<tr><td>${data.items[i].snippet.title}</td></tr>`);
+                            $(`${tb}_countUpcoming`).text(countUpcoming);
+                        }
+                    }
+                    totalLive += countLive;
+                    totalCompleted += countCompleted;
+                    totalUpcoming += countUpcoming;
+                });
             }
 
-            vList = list("UCDwc4dzRA5utkDyFSqsG87A"); // MMDA NOW1 channel
-            getVideoStatus(vList);
-            //list("UC5K4nCBwE_Z4PVURzLD4Zzw"); // MMDA NOW2 channel
+            getVideolist("UCDwc4dzRA5utkDyFSqsG87A", "now1"); // MMDA NOW1 channel
+            getVideolist("UC5K4nCBwE_Z4PVURzLD4Zzw", "now2"); // MMDA NOW2 channel
+            console.log(totalLive, totalCompleted, totalUpcoming);
+            $("#totalUpcoming").text(totalUpcoming);
+            $("#totalLive").text(totalLive);
+            $("#totalCompleted").text(totalCompleted);
         });
+
     </script>
 </body>
 
