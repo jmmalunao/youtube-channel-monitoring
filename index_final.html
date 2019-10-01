@@ -45,7 +45,7 @@
     <script>
         $.noConflict;
         jQuery(document).ready(function ($) {
-            let youtubeKey = "AIzaSyB0UE7oHOhdFpK1fB0yaCfslLM5EEz5Eok"; // Please change your own key here.
+            let youtubeKey = ""; // Please change your own key here.
             let totalUpcoming = 0;
             let totalLive = 0;
             let totalCompleted = 0;
@@ -127,8 +127,9 @@
                 });
             }
 
-            getVideolist("UCDwc4dzRA5utkDyFSqsG87A");
-            getVideolist("UC5K4nCBwE_Z4PVURzLD4Zzw");
+            // provide your YouTube Channel ID here...
+            getVideolist("<channelId>");
+            getVideolist("<channelId2>");
         });
 
     </script>
