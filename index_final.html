@@ -1,0 +1,137 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta http-equiv="X-UA-Compatible" content="ie=edge">
+    <title>Table Test</title>
+    <script src="https://ajax.googleapis.com/ajax/libs/jquery/3.4.1/jquery.min.js"></script>
+    <style>
+        table,
+        th,
+        td {
+            border: 1px solid black;
+            border-collapse: collapse;
+        }
+
+        th,
+        td {
+            padding: 5px 15px;
+            width: 350px;
+        }
+
+        .fontred {
+            color: red;
+        }
+    </style>
+</head>
+
+<body>
+    <table id="tbl_total">
+        <thead>
+            <tr>
+                <th colspan="4">Grand Total</th>
+            </tr>
+            <tr>
+                <th>Upcoming: <span id="totalUpcoming"></span></th>
+                <th>Live: <span id="totalLive"></span></td>
+                <th>Completed: <span id="totalCompleted"></span></th>
+                <th>Uncategorized: <span id="totalUncategorized"></span></th>
+            </tr>
+            </tbody>
+    </table>
+    <br />
+    <script>
+        $.noConflict;
+        jQuery(document).ready(function ($) {
+            let youtubeKey = "AIzaSyB0UE7oHOhdFpK1fB0yaCfslLM5EEz5Eok"; // Please change your own key here.
+            let totalUpcoming = 0;
+            let totalLive = 0;
+            let totalCompleted = 0;
+            let totalUncategorized = 0;
+
+            function getVideolist(channelId) {
+
+                let tbl = `tbl_${channelId}`;
+
+                $.getJSON(`https://www.googleapis.com/youtube/v3/search?part=snippet&channelId=${channelId}&maxResults=50&key=${youtubeKey}`, function (data) {
+
+                    let totalResults = data.pageInfo.totalResults - 1;
+                    let trUpcoming = 0;
+                    let trLive = 0;
+                    let trCompleted = 0;
+                    let trUncategorized = 0;
+
+                    $(document.body).append(`<table id="${tbl}">
+                        <thead>
+                            <tr>
+                                <th colspan="4">${data.items[1].snippet.channelTitle}</th>
+                            </tr>
+                            <tr>
+                                <th>Upcoming <span id="${tbl}_countUpcoming">0</span></th>
+                                <th>Live <span id="${tbl}_countLive">0</span></th>
+                                <th>Completed <span id="${tbl}_countCompleted">0</span></th>
+                                <th>Uncategorized <span id="${tbl}_countUncategorized">0</span></th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                        </tbody>
+                        <br/>
+                    </table>`);
+
+                    for (i = 1; i <= totalResults; i++) {
+                        let liveBroadcastContent = data.items[i].snippet.liveBroadcastContent; // video status
+                        let videoTitle = data.items[i].snippet.title;
+
+                        $(`#${tbl} tbody`).append("<tr><td></td><td></td><td></td><td></td></tr>");
+
+                        if (liveBroadcastContent == "upcoming") {
+                            trUpcoming++;
+                            $(`#${tbl} tbody tr:nth-child(${trUpcoming}) td:nth-child(1)`).text(videoTitle);
+
+                        } else if (liveBroadcastContent == "live") {
+                            trLive++;
+                            $(`#${tbl} tbody tr:nth-child(${trLive}) td:nth-child(2)`).text(videoTitle);
+                        } else if (liveBroadcastContent == "completed") {
+                            trCompleted++;
+                            $(`#${tbl} tbody tr:nth-child(${trCompleted}) td:nth-child(3)`).text(videoTitle);
+                        } else {
+                            trUncategorized++;
+                            $(`#${tbl} tbody tr:nth-child(${trUncategorized}) td:nth-child(4)`).html(videoTitle + " &#40; Status&#58;&#34;" + liveBroadcastContent + "&#34; &#41;");
+                        }
+                    }
+
+                    pinamataas = 0;
+                    if (trUpcoming >= trLive && trUpcoming >= trCompleted && trUpcoming >= trUncategorized) { pinamataas = trUpcoming; }
+                    if (trLive >= trUpcoming && trLive >= trCompleted && trLive >= trUncategorized) { pinamataas = trLive; }
+                    if (trCompleted >= trUpcoming && trCompleted >= trLive && trCompleted >= trUncategorized) { pinamataas = trCompleted; }
+                    if (trUncategorized >= trUpcoming && trUncategorized >= trLive && trUncategorized >= trCompleted) { pinamataas = trUncategorized; }
+
+                    console.log(trUpcoming, trLive, trCompleted, pinamataas);
+                    $(`#${tbl} tbody tr:gt(${pinamataas - 1})`).remove();
+
+                    $(`#${tbl}_countUpcoming`).text(trUpcoming);
+                    totalUpcoming += trUpcoming;
+                    $(`#${tbl}_countLive`).text(trLive);
+                    totalLive += trLive;
+                    $(`#${tbl}_countCompleted`).text(trCompleted);
+                    totalCompleted += trCompleted;
+                    $(`#${tbl}_countUncategorized`).text(trUncategorized);
+                    totalUncategorized += trUncategorized;
+
+                    $("#totalUpcoming").text(totalUpcoming);
+                    $("#totalLive").text(totalLive);
+                    $("#totalCompleted").text(totalCompleted);
+                    $("#totalUncategorized").text(totalUncategorized);
+                });
+            }
+
+            getVideolist("UCDwc4dzRA5utkDyFSqsG87A");
+            getVideolist("UC5K4nCBwE_Z4PVURzLD4Zzw");
+        });
+
+    </script>
+</body>
+
+</html>
